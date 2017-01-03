@@ -1,21 +1,54 @@
 extern crate reqwest;
 extern crate regex;
 
-use reqwest::Client;
-use reqwest::header::{Cookie, CookiePair};
+use reqwest::{Client, Response};
+use reqwest::header::{Cookie, SetCookie, CookieJar};
 use regex::Regex;
 use std::io::Read;
 use std::iter::FromIterator;
+use std::collections::HashMap;
 
 fn main() {
-    let url = "https://www.scarlet.be/customercare/usage/dispatch.do";
-    let cookie_name = "JSESSIONID".to_owned();
-    let cookie_value = "6870C04D2F9757EA7B6F89F2DD3F3FC4".to_owned();
+    let username = "XXX";
+    let password = "XXX";
+    let cookies = login(username, password);
+
+    let (transfert_volume, days_left) = get_consomation(cookies);
+
+    println!("{:?}", transfert_volume);
+    println!("{:?}", days_left);
+}
+
+fn login(username: &str, password: &str) -> Cookie {
+    let url = "https://www.scarlet.be/customercare/logon.do?language=fr";
+
+    let mut params = HashMap::new();
+    params.insert("username", username);
+    params.insert("password", password);
 
     let client: Client = Client::new().expect("Couldn't create client");
 
-    let mut response = client.get(url)
-        .header(Cookie(vec![CookiePair::new(cookie_name, cookie_value)]))
+    let response: Response = client.post(url)
+        .form(&params)
+        .send()
+        .expect("Failed to send login request");
+
+    let set_cookie: &SetCookie = response.headers().get::<SetCookie>().expect("No cookie returned on login");
+
+    let mut cookie_jar = CookieJar::new(b"");
+
+    set_cookie.apply_to_cookie_jar(&mut cookie_jar);
+
+    Cookie::from_cookie_jar(&cookie_jar)
+}
+
+fn get_consomation(cookies: Cookie) -> (f64, u32) {
+    let url = "https://www.scarlet.be/customercare/usage/dispatch.do";
+
+    let client: Client = Client::new().expect("Couldn't create client");
+
+    let mut response: Response = client.get(url)
+        .header(cookies)
         .send()
         .expect("Failed to send request")
     ;
@@ -44,6 +77,5 @@ fn main() {
         .parse()
         .expect("Could not parce days left to u32");
 
-    println!("{:?}", transfert_volume);
-    println!("{:?}", days_left);
+    (transfert_volume, days_left)
 }
