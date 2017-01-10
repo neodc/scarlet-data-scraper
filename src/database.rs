@@ -15,7 +15,7 @@ impl Database {
     pub fn add_scarlet_data(&self, scarlet_data: &ScarletData) {
         let period_id = self.get_period_id(scarlet_data);
 
-        self.pool.prep_exec("INSERT INTO data (period_id, transfert_volume, days_left) VALUE (?, ?, ?)", (period_id, scarlet_data.transfert_volume(), scarlet_data.days_left())).unwrap();
+        self.pool.prep_exec("INSERT INTO data (period_id, transfert_volume, max_volume, days_left) VALUE (?, ?, ?, ?)", (period_id, scarlet_data.transfert_volume(), scarlet_data.max_volume(), scarlet_data.days_left())).unwrap();
     }
 
     fn get_period_id(&self, scarlet_data: &ScarletData) -> u64 {

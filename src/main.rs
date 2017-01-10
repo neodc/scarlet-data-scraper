@@ -24,8 +24,13 @@ fn main() {
     let scarlet_data = ScarletData::load(config.username(), config.password());
 
     println!("transfert_volume: {}", scarlet_data.transfert_volume());
+    println!("max_volume: {}", scarlet_data.max_volume());
     println!("days_left: {}", scarlet_data.days_left());
 
     println!("Saving...");
     Database::new(config.database_url()).add_scarlet_data(&scarlet_data);
+
+    let volume_by_days_left = (scarlet_data.max_volume()-scarlet_data.transfert_volume())/scarlet_data.days_left() as f64;
+
+    println!("volume_by_days_left: {}", volume_by_days_left);
 }

@@ -8,6 +8,7 @@ use std::collections::HashMap;
 #[derive(Debug)]
 pub struct ScarletData {
     transfert_volume: f64,
+    max_volume: f64,
     days_left: u32,
 }
 
@@ -15,16 +16,21 @@ impl ScarletData {
     pub fn load(username: &str, password: &str) -> Self {
         let cookies = Self::login(username, password);
 
-        let (transfert_volume, days_left) = Self::get_consomation(cookies);
+        let (transfert_volume, max_volume, days_left) = Self::get_consomation(cookies);
 
         ScarletData {
             transfert_volume: transfert_volume,
+            max_volume: max_volume,
             days_left: days_left,
         }
     }
 
     pub fn transfert_volume(&self) -> f64 {
         self.transfert_volume
+    }
+
+    pub fn max_volume(&self) -> f64 {
+        self.max_volume
     }
 
     pub fn days_left(&self) -> u32 {
@@ -54,7 +60,7 @@ impl ScarletData {
         Cookie::from_cookie_jar(&cookie_jar)
     }
 
-    fn get_consomation(cookies: Cookie) -> (f64, u32) {
+    fn get_consomation(cookies: Cookie) -> (f64, f64, u32) {
         let url = "https://www.scarlet.be/customercare/usage/dispatch.do";
 
         let client: Client = Client::new().expect("Couldn't create client");
@@ -70,12 +76,22 @@ impl ScarletData {
 
         let body = String::from_iter(buf.into_iter().map(|c| c as char));
 
-        let transfert_volume_regex: Regex = Regex::new(r#"Math.round\(([0-9.]+)\)"#).unwrap();
+        let volume_regex: Regex = Regex::new(r#"Math.round\(([0-9.]+)\)"#).unwrap();
         let days_left_regex: Regex = Regex::new(r#"(\d+) jour"#).unwrap();
 
-        let transfert_volume: f64 = transfert_volume_regex
-            .captures(body.as_ref())
-            .expect("Can't match transfert_volume_regex")
+        let mut volume_captures = volume_regex.captures_iter(body.as_ref());
+
+        let transfert_volume: f64 = volume_captures
+            .next()
+            .expect("Can't match volume_regex for transfert_volume")
+            .at(1)
+            .unwrap()
+            .parse()
+            .expect("Could not parce transfert volume to f64");
+
+        let max_volume: f64 = volume_captures
+            .next()
+            .expect("Can't match volume_regex for max_volume")
             .at(1)
             .unwrap()
             .parse()
@@ -89,6 +105,6 @@ impl ScarletData {
             .parse()
             .expect("Could not parce days left to u32");
 
-        (transfert_volume, days_left)
+        (transfert_volume, max_volume, days_left)
     }
 }
