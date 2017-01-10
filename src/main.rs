@@ -1,5 +1,9 @@
 extern crate reqwest;
 extern crate regex;
+extern crate rustc_serialize;
+extern crate toml;
+
+mod config;
 
 use reqwest::{Client, Response};
 use reqwest::header::{Cookie, SetCookie, CookieJar};
@@ -7,11 +11,15 @@ use regex::Regex;
 use std::io::Read;
 use std::iter::FromIterator;
 use std::collections::HashMap;
+use std::env;
+use std::path::Path;
 
 fn main() {
-    let username = "XXX";
-    let password = "XXX";
-    let cookies = login(username, password);
+    let arg: Option<String> = env::args().nth(1);
+
+    let config = config::Config::load(arg.as_ref().map(|str| Path::new(str)));
+
+    let cookies = login(config.username(), config.password());
 
     let (transfert_volume, days_left) = get_consomation(cookies);
 
