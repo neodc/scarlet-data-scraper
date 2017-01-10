@@ -7,6 +7,7 @@ use toml;
 pub struct Config {
     username: String,
     password: String,
+    database_url: String,
 }
 
 pub const DEFAULT_PATH: &'static str = "config.toml";
@@ -30,5 +31,9 @@ impl Config {
 
     pub fn password(&self) -> &str {
         self.password.as_ref()
+    }
+
+    pub fn database_url(&self) -> &str {
+        self.database_url.as_ref()
     }
 }
