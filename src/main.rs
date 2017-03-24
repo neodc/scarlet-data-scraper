@@ -2,7 +2,6 @@ extern crate reqwest;
 extern crate regex;
 extern crate rustc_serialize;
 extern crate toml;
-#[macro_use]
 extern crate mysql;
 
 mod config;
@@ -32,10 +31,20 @@ fn main() {
     }
 
     println!("Saving...");
-    Database::new(config.database_url()).add_scarlet_data(&scarlet_data);
+    let database = Database::new(config.database_url());
+
+    database.add_scarlet_data(&scarlet_data);
 
     if let Some(days_left) = scarlet_data.days_left() {
         let volume_by_days_left = (scarlet_data.max_volume()-scarlet_data.transfert_volume())/days_left as f64;
         println!("volume_by_days_left: {}", volume_by_days_left);
+
+        let since_last_day = database.get_consomation_since_last_day(&scarlet_data);
+
+        if since_last_day > volume_by_days_left {
+            println!("WARNING {}Go consumed last day but only {}Go left per day", since_last_day, volume_by_days_left);
+
+            // TODO send notification
+        }
     }
 }

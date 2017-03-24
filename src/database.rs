@@ -36,4 +36,17 @@ LIMIT 1", ()).unwrap();
 
         self.pool.prep_exec("INSERT INTO period () VALUE ()", ()).unwrap().last_insert_id()
     }
+
+    pub fn get_consomation_since_last_day(&self, scarlet_data: &ScarletData) -> f64 {
+        let transfert_volume_last_day: f64 =
+            if let Some(Ok(mut result)) = self.pool.prep_exec("SELECT MAX(transfert_volume) FROM data WHERE id = (SELECT MAX(id) FROM data WHERE creation_time <= NOW() - INTERVAL 1 DAY)", ())
+                .unwrap()
+                .next() {
+            result.take(0).unwrap()
+        } else {
+            0f64
+        };
+
+        scarlet_data.transfert_volume() - transfert_volume_last_day
+    }
 }
