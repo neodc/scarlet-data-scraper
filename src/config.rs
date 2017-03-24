@@ -8,6 +8,7 @@ pub struct Config {
     username: String,
     password: String,
     database_url: String,
+    telegram_token: String,
 }
 
 pub const DEFAULT_PATH: &'static str = "config.toml";
@@ -35,5 +36,9 @@ impl Config {
 
     pub fn database_url(&self) -> &str {
         self.database_url.as_ref()
+    }
+
+    pub fn telegram_token(&self) -> &str {
+        self.telegram_token.as_ref()
     }
 }
