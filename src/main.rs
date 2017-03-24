@@ -4,6 +4,7 @@ extern crate rustc_serialize;
 extern crate toml;
 extern crate mysql;
 extern crate teleborg;
+extern crate chrono;
 
 mod config;
 mod scarlet_data;
@@ -11,6 +12,8 @@ mod database;
 
 use std::env;
 use std::path::Path;
+use std::fs::File;
+use std::io::{Read, Write};
 
 use database::Database;
 use scarlet_data::ScarletData;
@@ -53,13 +56,30 @@ fn main() {
 }
 
 fn send_notification(config: &config::Config, message: &str) {
+    let filename = "last_message";
+
+    if let Ok(mut file) = File::open(filename) {
+        let mut contents = String::new();
+        if let Ok(_) = file.read_to_string(&mut contents) {
+            if let Ok(time) = chrono::DateTime::parse_from_rfc3339(contents.as_str()) {
+                if (chrono::UTC::now().timestamp() - time.timestamp()) <= 60*60*24 {
+                    return;
+                }
+            }
+        }
+    }
+
     let token = config.telegram_token();
 
     let chat_id = -183853562;
 
     let bot = teleborg::Bot::new(format!("https://api.telegram.org/bot{}", token)).unwrap();
 
-    bot.send_message(&chat_id, message, None, None, None, None);
+    if let Ok(_) = bot.send_message(&chat_id, message, None, None, None, None) {
+        if let Ok(mut file) = File::create(filename) {
+            let _ = file.write_all(chrono::UTC::now().to_rfc3339().as_bytes());
+        }
+    }
 
     /*
     Use to get the id of the chat
