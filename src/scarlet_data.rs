@@ -9,7 +9,7 @@ use std::collections::HashMap;
 pub struct ScarletData {
     transfert_volume: f64,
     max_volume: f64,
-    days_left: u32,
+    days_left: Option<u32>,
 }
 
 impl ScarletData {
@@ -33,7 +33,7 @@ impl ScarletData {
         self.max_volume
     }
 
-    pub fn days_left(&self) -> u32 {
+    pub fn days_left(&self) -> Option<u32> {
         self.days_left
     }
 
@@ -60,7 +60,7 @@ impl ScarletData {
         Cookie::from_cookie_jar(&cookie_jar)
     }
 
-    fn get_consomation(cookies: Cookie) -> (f64, f64, u32) {
+    fn get_consomation(cookies: Cookie) -> (f64, f64, Option<u32>) {
         let url = "https://www.scarlet.be/customercare/usage/dispatch.do";
 
         let client: Client = Client::new().expect("Couldn't create client");
@@ -77,7 +77,7 @@ impl ScarletData {
         let body = String::from_iter(buf.into_iter().map(|c| c as char));
 
         let volume_regex: Regex = Regex::new(r#"Math.round\(([0-9.]+)\)"#).unwrap();
-        let days_left_regex: Regex = Regex::new(r#"(\d+) jour"#).unwrap();
+        let days_left_regex: Regex = Regex::new(r#"(\d+) jour|Remise à zéro: aujourd'hui"#).unwrap();
 
         let mut volume_captures = volume_regex.captures_iter(body.as_ref());
 
@@ -97,13 +97,11 @@ impl ScarletData {
             .parse()
             .expect("Could not parce transfert volume to f64");
 
-        let days_left: u32 = days_left_regex
+        let days_left: Option<u32> = days_left_regex
             .captures(body.as_ref())
             .expect("Can't match days_left_regex")
             .at(1)
-            .unwrap()
-            .parse()
-            .expect("Could not parce days left to u32");
+            .map(|str| str.parse().unwrap());
 
         (transfert_volume, max_volume, days_left)
     }
