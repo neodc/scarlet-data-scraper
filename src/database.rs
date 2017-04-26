@@ -25,14 +25,18 @@ ORDER BY id DESC
 LIMIT 1", ()).unwrap();
 
         if let Some(data) = tmp {
-            if let (&Value::Int(ref days_left), &Value::Int(ref period_id)) = (&data["days_left"], &data["period_id"]) {
-                if let Some(new_days_left) = scarlet_data.days_left() {
-                    if *days_left as u32 >= new_days_left {
-                        return *period_id as u64
+            match (&data["period_id"], &data["days_left"]) {
+                (&Value::Int(ref period_id), &Value::Int(ref days_left)) => {
+                    if let Some(new_days_left) = scarlet_data.days_left() {
+                        if *days_left as u32 >= new_days_left {
+                            return *period_id as u64
+                        }
                     }
-                } else {
+                }
+                (&Value::Int(ref period_id), &Value::NULL) => {
                     return *period_id as u64
                 }
+                _ => {}
             }
         }
 
