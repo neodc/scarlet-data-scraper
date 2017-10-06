@@ -1,0 +1,4 @@
+fn_call_width = 120
+max_width = 120
+hard_tabs = true
+write_mode = "Overwrite"

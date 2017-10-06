@@ -5,40 +5,42 @@ use toml;
 
 #[derive(Debug, RustcDecodable)]
 pub struct Config {
-    username: String,
-    password: String,
-    database_url: String,
-    telegram_token: String,
+	username: String,
+	password: String,
+	database_url: String,
+	telegram_token: String,
 }
 
 pub const DEFAULT_PATH: &'static str = "config.toml";
 
 impl Config {
-    pub fn load(path: Option<&Path>) -> Self {
-        let path = path.unwrap_or_else(|| Path::new(DEFAULT_PATH));
+	pub fn load(path: Option<&Path>) -> Self {
+		let path = path.unwrap_or_else(|| Path::new(DEFAULT_PATH));
 
-        let mut f = File::open(path).expect("Could not open config file");
-        let mut buffer = String::new();
+		let mut f = File::open(path).expect("Could not open config file");
+		let mut buffer = String::new();
 
-        // load content
-        f.read_to_string(&mut buffer).expect("Could not read config file");
+		// load content
+		f.read_to_string(&mut buffer).expect(
+			"Could not read config file",
+		);
 
-        toml::decode_str(buffer.as_ref()).expect("Unable to parse config file")
-    }
+		toml::decode_str(buffer.as_ref()).expect("Unable to parse config file")
+	}
 
-    pub fn username(&self) -> &str {
-        self.username.as_ref()
-    }
+	pub fn username(&self) -> &str {
+		self.username.as_ref()
+	}
 
-    pub fn password(&self) -> &str {
-        self.password.as_ref()
-    }
+	pub fn password(&self) -> &str {
+		self.password.as_ref()
+	}
 
-    pub fn database_url(&self) -> &str {
-        self.database_url.as_ref()
-    }
+	pub fn database_url(&self) -> &str {
+		self.database_url.as_ref()
+	}
 
-    pub fn telegram_token(&self) -> &str {
-        self.telegram_token.as_ref()
-    }
+	pub fn telegram_token(&self) -> &str {
+		self.telegram_token.as_ref()
+	}
 }
