@@ -60,7 +60,7 @@ fn send_notification(config: &config::Config, message: &str) {
 
 	if let Ok(mut file) = File::open(filename) {
 		let mut contents = String::new();
-		if let Ok(_) = file.read_to_string(&mut contents) {
+		if file.read_to_string(&mut contents).is_ok() {
 			if let Ok(time) = chrono::DateTime::parse_from_rfc3339(contents.as_str()) {
 				if (chrono::Utc::now().timestamp() - time.timestamp()) <= 60 * 60 * 24 {
 					return;
@@ -75,7 +75,7 @@ fn send_notification(config: &config::Config, message: &str) {
 
 	let bot = teleborg::Bot::new(format!("https://api.telegram.org/bot{}", token)).unwrap();
 
-	if let Ok(_) = bot.send_message(&chat_id, message, None, None, None, None, None) {
+	if bot.send_message(&chat_id, message, None, None, None, None, None).is_ok() {
 		if let Ok(mut file) = File::create(filename) {
 			let _ = file.write_all(chrono::Utc::now().to_rfc3339().as_bytes());
 		}
